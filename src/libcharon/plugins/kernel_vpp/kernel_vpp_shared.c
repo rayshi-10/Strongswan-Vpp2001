@@ -548,7 +548,7 @@ METHOD(vac_t, register_event, status_t, private_vac_t *this, char *in,
     if (rmp->retval)
         return FAILED;
     free(out);
-	free(in);
+	vac_free(in);
     this->events_lock->lock(this->events_lock);
     INIT(event,
             .cb = cb,

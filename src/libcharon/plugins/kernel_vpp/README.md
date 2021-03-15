@@ -9,7 +9,7 @@ GCM is also supported and VPP must run with DPDK with crypto device or device th
 ## How to build strongswan for VPP ##
 Install vpp-lib and vpp-dev packages. The plugins are disabled by default and can be enabled by adding:
 
-    --enable-socket-vpp --enable-kernel-vpp --enable-libipsec
+    --enable-socket-vpp --enable-kernel-vpp
 
 to the ./configure options.
 

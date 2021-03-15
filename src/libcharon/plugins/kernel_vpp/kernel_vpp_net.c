@@ -308,7 +308,7 @@ static host_t *get_route(private_kernel_vpp_net_t *this, host_t *dest,
                 fp = rmp->route.paths;
                 for (i = 0; i < num; i++)
                 {
-#define IS_IP4_ANY(a) (a[0]==0&&a[1]==0&&a[2]==0&a[3]==0)
+#define IS_IP4_ANY(a) (a[0]==0&&a[1]==0&&a[2]==0&&a[3]==0)
 					if (fp->type == FIB_API_PATH_TYPE_DROP)
                     {
                         fp++;
@@ -328,7 +328,8 @@ static host_t *get_route(private_kernel_vpp_net_t *this, host_t *dest,
                     {
                         path.sw_if_index = ntohl(fp->sw_if_index);
                         path.preference = fp->preference;
-                        chunk_clear(&path.next_hop);
+                        //chunk_clear(&path.next_hop);
+						memwipe(path.next_hop.ptr, path.next_hop.len);
                         path.next_hop = chunk_create(fp->nh.address.ip4, 4);
                     }
                     fp++;
@@ -525,7 +526,7 @@ METHOD(kernel_net_t, destroy, void,
  */
 static void update_addrs(private_kernel_vpp_net_t *this, iface_t *entry)
 {
-    char *out;
+    char *out = NULL, *tmp = NULL;
     int out_len, i, num;
     vl_api_ip_address_dump_t *mp;
     vl_api_ip_address_details_t *rmp;
@@ -545,6 +546,7 @@ static void update_addrs(private_kernel_vpp_net_t *this, iface_t *entry)
 	}
     num = out_len / sizeof(*rmp);
     addrs = linked_list_create();
+	tmp = out;
     for (i = 0; i < num; i++)
     {
         rmp = (void *)out;
@@ -552,7 +554,8 @@ static void update_addrs(private_kernel_vpp_net_t *this, iface_t *entry)
         host = host_create_from_chunk(AF_INET, chunk_create(rmp->prefix.address.un.ip4, 4), 0);
         addrs->insert_last(addrs, host);
     }
-    free(out);
+    free(tmp);
+    out = NULL;
 
     mp->is_ipv6 = 1;
     if (vac->send_dump(vac, (char *)mp, sizeof(*mp), &out, &out_len))
@@ -562,6 +565,7 @@ static void update_addrs(private_kernel_vpp_net_t *this, iface_t *entry)
         return;
 	}
     num = out_len / sizeof(*rmp);
+	tmp = out;
     for (i = 0; i < num; i++)
     {
         rmp = (void *)out;
@@ -570,7 +574,7 @@ static void update_addrs(private_kernel_vpp_net_t *this, iface_t *entry)
         addrs->insert_last(addrs, host);
     }
     vl_msg_api_free(mp);
-    free(out);
+    free(tmp);
 
     entry->addrs->destroy(entry->addrs);
     entry->addrs = linked_list_create_from_enumerator(addrs->create_enumerator(addrs));
