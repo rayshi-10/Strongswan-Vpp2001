@@ -366,8 +366,8 @@ static uint32_t get_sw_if_index(char *interface)
     mp->_vl_msg_id = htons(VL_API_SW_INTERFACE_DUMP);
     mp->name_filter_valid = TRUE;
     mp->name_filter.length = htonl (name_filter_len);
-    strncpy((char *) mp->name_filter.buf, interface, name_filter_len);
-
+   // strncpy((char *) mp->name_filter.buf, interface, name_filter_len);
+    clib_memcpy_fast (mp->name_filter.buf, interface, name_filter_len);
     if (vac->send(vac, (char *)mp, msg_len, &out, &out_len))
     {
         goto error;
@@ -895,7 +895,8 @@ METHOD(kernel_ipsec_t, add_sa, status_t,
     mp->_vl_msg_id = htons(VL_API_IPSEC_SAD_ENTRY_ADD_DEL);
     mp->is_add = 1;
     mp->entry.sad_id = htonl(sad_id);
-    mp->entry.spi = htonl(id->spi);
+    //mp->entry.spi = htonl(id->spi);
+    mp->entry.spi = id->spi;
     mp->entry.protocol = id->proto == IPPROTO_ESP?htonl(IPSEC_API_PROTO_ESP):htonl(IPSEC_API_PROTO_AH);
 #if 0    
     mp->entry.dst_port = ntohs(id->dst->get_port(id->dst));
